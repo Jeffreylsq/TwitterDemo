@@ -36,21 +36,17 @@ public class Server {
              * Listens for a connection to be made to this socket and accepts it.
              * The method blocks until a connection is made.
              */
-            System.out.println("Waiting for client connect to server...");
-            Socket socket = server.accept();
-            System.out.println("A client connect to server.");
+           while (true) {
+               System.out.println("Waiting for client connect to server...");
+               Socket socket = server.accept();
+               System.out.println("A client connect to server.");
 
-            /**
-             * Request InputStream through Socket, read client message
-             * BR - ISR - IN
-             */
-            InputStream in = socket.getInputStream();
-            InputStreamReader isp = new InputStreamReader(in ,"utf-8");
-            BufferedReader br = new BufferedReader(isp);
-            String message = null;
-            while ((message = br.readLine()) != null) {
-                System.out.println("Client said: " + message);
-            }
+               //Run a thread
+               ClientHandler handler = new ClientHandler(socket);
+               Thread t = new Thread(handler);
+               t.start();
+           }
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -59,5 +55,36 @@ public class Server {
     public static void main(String[] args) {
         Server server = new Server();
         server.start();
+    }
+
+    /**
+     * This class is used to interact with one particular client
+     */
+    private class ClientHandler implements Runnable {
+        private Socket socket;
+
+        //need server socket as parameter
+        public ClientHandler(Socket socket) {
+            this.socket = socket;
+        }
+        @Override
+        public void run() {
+            System.out.println("One client handler is started");
+            try {
+                /**
+                 * Request InputStream through Socket, read client message
+                 * BR - ISR - IN
+                 */
+                InputStream in = socket.getInputStream();
+                InputStreamReader isp = new InputStreamReader(in ,"utf-8");
+                BufferedReader br = new BufferedReader(isp);
+                String message = null;
+                while ((message = br.readLine()) != null) {
+                    System.out.println("Client said: " + message);
+                }
+            } catch(Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 }
